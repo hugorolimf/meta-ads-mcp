@@ -10,7 +10,6 @@ from typing import Dict, Any, Optional
 from .auth import login as login_auth
 from .resources import list_resources, get_resource
 from .utils import logger
-from .pipeboard_auth import pipeboard_auth_manager
 import time
 
 # Initialize FastMCP server
@@ -74,7 +73,6 @@ class StreamableHTTPHandler:
         """
         # Security validation - only allow safe headers
         ALLOWED_VIA_HEADERS = {
-            'pipeboard_api_token': True,   # ✅ Primary method - simple and secure
             'meta_app_id': True,           # ✅ Fallback only - triggers OAuth complexity
             'meta_app_secret': False,      # ❌ Server environment only
             'meta_access_token': False,    # ❌ Use proper auth flows instead
@@ -272,51 +270,19 @@ def main():
         login_cli()
         return 0
     
-    # Check for Pipeboard authentication and token
-    pipeboard_api_token = os.environ.get("PIPEBOARD_API_TOKEN")
-    if pipeboard_api_token:
-        logger.info("Using Pipeboard authentication")
-        print("✅ Pipeboard authentication enabled")
-        print(f"   API token: {pipeboard_api_token[:8]}...{pipeboard_api_token[-4:]}")
-        # Check for existing token
-        token = pipeboard_auth_manager.get_access_token()
-        if not token:
-            logger.info("No valid Pipeboard token found. Initiating browser-based authentication flow.")
-            print("No valid Meta token found. Opening browser for authentication...")
-            try:
-                # Initialize the auth flow and get the login URL
-                auth_data = pipeboard_auth_manager.initiate_auth_flow()
-                login_url = auth_data.get('loginUrl')
-                if login_url:
-                    logger.info(f"Opening browser with login URL: {login_url}")
-                    webbrowser.open(login_url)
-                    print("Please authorize the application in your browser.")
-                    print("After authorization, the token will be automatically retrieved.")
-                    print("Waiting for authentication to complete...")
-                    
-                    # Poll for token completion
-                    max_attempts = 30  # Try for 30 * 2 = 60 seconds
-                    for attempt in range(max_attempts):
-                        print(f"Waiting for authentication... ({attempt+1}/{max_attempts})")
-                        # Try to get the token again
-                        token = pipeboard_auth_manager.get_access_token(force_refresh=True)
-                        if token:
-                            print("Authentication successful!")
-                            break
-                        time.sleep(2)  # Wait 2 seconds between attempts
-                    
-                    if not token:
-                        print("Authentication timed out. Starting server anyway.")
-                        print("You may need to restart the server after completing authentication.")
-                else:
-                    logger.error("No login URL received from Pipeboard API")
-                    print("Error: Could not get authentication URL. Check your API token.")
-            except Exception as e:
-                logger.error(f"Error initiating browser-based authentication: {e}")
-                print(f"Error: Could not start authentication: {e}")
-        else:
-            print(f"✅ Valid Pipeboard access token found")
-            print(f"   Token preview: {token[:10]}...{token[-5:]}")
+    # Authentication configured via META_APP_ID/META_APP_SECRET or META_ACCESS_TOKEN
+    meta_app_id = os.environ.get("META_APP_ID")
+    meta_access_token = os.environ.get("META_ACCESS_TOKEN")
+    
+    if meta_access_token:
+        logger.info("Using direct Meta access token authentication")
+        print("✅ Direct Meta access token configured")
+    elif meta_app_id:
+        logger.info("Using Meta app ID for OAuth flow")
+        print(f"✅ Meta app authentication configured")
+    else:
+        logger.warning("No authentication method configured")
+        print("⚠️  No authentication configured. Set META_ACCESS_TOKEN or META_APP_ID environment variables.")
     
     # Transport-specific server initialization and startup
     if args.transport == "streamable-http":

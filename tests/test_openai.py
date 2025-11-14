@@ -6,11 +6,15 @@ openai = pytest.importorskip("openai", reason="openai package not installed")
 
 
 @pytest.mark.skipif(
-    not os.getenv("PIPEBOARD_API_TOKEN"),
-    reason="PIPEBOARD_API_TOKEN not set - skipping OpenAI integration test"
+    True,
+    reason="Pipeboard integration removed - update this test for your infrastructure"
 )
 def test_openai_mcp_integration():
-    """Test OpenAI integration with Meta Ads MCP via Pipeboard."""
+    """Test OpenAI integration with Meta Ads MCP.
+    
+    NOTE: This test was previously configured for Pipeboard service.
+    Update the server URL and authentication method for your new infrastructure.
+    """
     client = openai.OpenAI()
 
     resp = client.responses.create(
@@ -18,9 +22,9 @@ def test_openai_mcp_integration():
         tools=[{
             "type": "mcp",
             "server_label": "meta-ads",
-            "server_url": "https://mcp.pipeboard.co/meta-ads-mcp",
+            "server_url": "http://localhost:8080",  # Update with your server URL
             "headers": {
-                "Authorization": f"Bearer {os.getenv('PIPEBOARD_API_TOKEN')}"
+                "Authorization": f"Bearer {os.getenv('META_ACCESS_TOKEN')}"
             },
             "require_approval": "never",
         }],

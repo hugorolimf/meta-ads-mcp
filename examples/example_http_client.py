@@ -19,14 +19,14 @@ class MetaAdsMCPClient:
     """Simple HTTP client for Meta Ads MCP server"""
     
     def __init__(self, base_url: str = "http://localhost:8080", 
-                 pipeboard_token: Optional[str] = None,
-                 meta_access_token: Optional[str] = None):
+                 meta_access_token: Optional[str] = None,
+                 bearer_token: Optional[str] = None):
         """Initialize the client
         
         Args:
             base_url: Base URL of the MCP server
-            pipeboard_token: Pipeboard API token (recommended)
-            meta_access_token: Direct Meta access token (fallback)
+            meta_access_token: Direct Meta access token
+            bearer_token: Bearer token for authentication
         """
         self.base_url = base_url.rstrip('/')
         self.endpoint = f"{self.base_url}/mcp/"
@@ -39,12 +39,12 @@ class MetaAdsMCPClient:
             "User-Agent": "MetaAdsMCP-Example-Client/1.0"
         }
         
-        # Add authentication
-        if pipeboard_token:
-            self.headers["Authorization"] = f"Bearer {pipeboard_token}"
-            print(f"✅ Using Pipeboard authentication")
+        # Add authentication if provided
+        if bearer_token:
+            self.headers["Authorization"] = f"Bearer {bearer_token}"
+            print(f"✅ Using Bearer token authentication")
         elif meta_access_token:
-            self.headers["X-META-ACCESS-TOKEN"] = meta_access_token
+            self.headers["Authorization"] = f"Bearer {meta_access_token}"
             print(f"✅ Using direct Meta token authentication")
         else:
             print(f"⚠️  No authentication provided - tools will require auth")
@@ -123,19 +123,19 @@ def main():
     print("="*60)
     
     # Check for authentication
-    pipeboard_token = os.environ.get("PIPEBOARD_API_TOKEN")
     meta_token = os.environ.get("META_ACCESS_TOKEN")
+    bearer_token = os.environ.get("BEARER_TOKEN")
     
-    if not pipeboard_token and not meta_token:
+    if not meta_token and not bearer_token:
         print("⚠️  No authentication tokens found in environment")
-        print("   Set PIPEBOARD_API_TOKEN or META_ACCESS_TOKEN for full functionality")
+        print("   Set META_ACCESS_TOKEN or BEARER_TOKEN for full functionality")
         print("   Using test token for demonstration...")
-        pipeboard_token = "demo_token_12345"
+        bearer_token = "demo_token_12345"
     
     # Create client
     client = MetaAdsMCPClient(
-        pipeboard_token=pipeboard_token,
-        meta_access_token=meta_token
+        meta_access_token=meta_token,
+        bearer_token=bearer_token
     )
     
     # Test the MCP protocol flow
@@ -196,7 +196,7 @@ def main():
         if "error" in parsed_content and "Authentication Required" in parsed_content["error"]["message"]:
             print(f"📋 Result: Authentication required (expected with demo token)")
             print(f"   This confirms the HTTP transport is working!")
-            print(f"   Use a real Pipeboard token for actual data access.")
+            print(f"   Use a real access token for actual data access.")
         else:
             print(f"📋 Result: {content[:200]}...")
     except:
@@ -212,7 +212,7 @@ def main():
     print("   Tool Call:  ✅ SUCCESS")
     print("\n🎉 Meta Ads MCP HTTP transport is fully functional!")
     print("\n💡 Next steps:")
-    print("   1. Set PIPEBOARD_API_TOKEN environment variable")
+    print("   1. Set META_ACCESS_TOKEN environment variable with your Meta token")
     print("   2. Call any of the 26 available Meta Ads tools")
     print("   3. Build your web application or automation scripts")
 

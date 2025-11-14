@@ -10,17 +10,10 @@ import asyncio
 import json
 from .utils import logger
 import requests
+from .callback_server import start_callback_server, shutdown_callback_server, token_container
 
-# Import from the new callback server module
-from .callback_server import (
-    start_callback_server,
-    shutdown_callback_server,
-    token_container,
-    callback_server_port
-)
-
-# Import the new Pipeboard authentication
-from .pipeboard_auth import pipeboard_auth_manager
+# Callback server functionality for local OAuth flow
+# Pipeboard authentication module has been removed
 
 # Auth constants
 # Scope includes pages_show_list and pages_read_engagement to fix issue #16
@@ -129,10 +122,8 @@ class AuthManager:
         self.app_id = app_id
         self.redirect_uri = redirect_uri
         self.token_info = None
-        # Check for Pipeboard token first
-        self.use_pipeboard = bool(os.environ.get("PIPEBOARD_API_TOKEN", ""))
-        if not self.use_pipeboard:
-            self._load_cached_token()
+        # Load cached token from storage
+        self._load_cached_token()
     
     def _get_token_cache_path(self) -> pathlib.Path:
         """Get the platform-specific path for token cache file"""
@@ -243,12 +234,6 @@ class AuthManager:
         Returns:
             Access token if successful, None otherwise
         """
-        # If Pipeboard auth is available, use that instead
-        if self.use_pipeboard:
-            logger.info("Using Pipeboard authentication")
-            return pipeboard_auth_manager.get_access_token(force_refresh=force_refresh)
-        
-        # Otherwise, use the original OAuth flow
         # Check if we already have a valid token
         if not force_refresh and self.token_info and not self.token_info.is_expired():
             return self.token_info.access_token
@@ -283,10 +268,6 @@ class AuthManager:
         Returns:
             Access token if available, None otherwise
         """
-        # If using Pipeboard, always delegate to the Pipeboard auth manager
-        if self.use_pipeboard:
-            return pipeboard_auth_manager.get_access_token()
-            
         if not self.token_info or self.token_info.is_expired():
             return None
         
@@ -294,11 +275,6 @@ class AuthManager:
         
     def invalidate_token(self) -> None:
         """Invalidate the current token, usually because it has expired or is invalid"""
-        # If using Pipeboard, delegate to the Pipeboard auth manager
-        if self.use_pipeboard:
-            pipeboard_auth_manager.invalidate_token()
-            return
-            
         if self.token_info:
             logger.info(f"Invalidating token: {self.token_info.access_token[:10]}...")
             self.token_info = None

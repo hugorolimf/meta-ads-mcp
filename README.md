@@ -8,17 +8,15 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for in
 
 [![MCP Badge](https://lobehub.com/badge/mcp/nictuku-meta-ads-mcp)](https://lobehub.com/mcp/nictuku-meta-ads-mcp)
 
-mcp-name: co.pipeboard/meta-ads-mcp
-
 ## Community & Support
 
 - [Discord](https://discord.gg/YzMwQ8zrjr). Join the community.
-- [Email Support](mailto:info@pipeboard.co). Email us for support.
+- [Issues](https://github.com/nictuku/meta-ads-mcp/issues). Report issues or request features.
 
 ## Table of Contents
 
-- [🚀 Getting started with Remote MCP (Recommended for Marketers)](#getting-started-with-remote-mcp-recommended)
-- [Local Installation (Technical Users Only)](#local-installation-technical-users-only)
+- [Quick Start](#quick-start)
+- [Local Installation](#local-installation)
 - [Features](#features)
 - [Configuration](#configuration)
 - [Available MCP Tools](#available-mcp-tools)
@@ -27,76 +25,41 @@ mcp-name: co.pipeboard/meta-ads-mcp
 - [Testing](#testing)
 - [Troubleshooting](#troubleshooting)
 
-## Getting started with Remote MCP (Recommended)
+## Quick Start
 
-The fastest and most reliable way to get started is to **[🚀 Get started with our Meta Ads Remote MCP](https://pipeboard.co)**. Our cloud service uses streamable HTTP transport for reliable, scalable access to Meta Ads data. No technical setup required - just connect and start analyzing your ad campaigns with AI!
+### Prerequisites
 
-### For Claude Pro/Max Users
+- Python 3.8+
+- A Meta (Facebook) Developer App with access to the Ads API
+- An Ad Account with administrative access
 
-1. Go to [claude.ai/settings/integrations](https://claude.ai/settings/integrations) (requires Claude Pro or Max)
-2. Click "Add Integration" and enter:
-   - **Name**: "Pipeboard Meta Ads" (or any name you prefer)
-   - **Integration URL**: `https://mcp.pipeboard.co/meta-ads-mcp`
-3. Click "Connect" next to the integration and follow the prompts to:
-   - Login to Pipeboard
-   - Connect your Facebook Ads account
+### Installation & Setup
 
-That's it! You can now ask Claude to analyze your Meta ad campaigns, get performance insights, and manage your advertising.
-
-#### Advanced: Direct Token Authentication (Claude)
-
-For direct token-based authentication without the interactive flow, use this URL format when adding the integration:
-
-```
-https://mcp.pipeboard.co/meta-ads-mcp?token=YOUR_PIPEBOARD_TOKEN
+1. Clone the repository:
+```bash
+git clone https://github.com/nictuku/meta-ads-mcp.git
+cd meta-ads-mcp
 ```
 
-Get your token at [pipeboard.co/api-tokens](https://pipeboard.co/api-tokens).
-
-### For Cursor Users
-
-Add the following to your `~/.cursor/mcp.json`. Once you enable the remote MCP, click on "Needs login" to finish the login process.
-
-
-```json
-{
-  "mcpServers": {
-    "meta-ads-remote": {
-      "url": "https://mcp.pipeboard.co/meta-ads-mcp"
-    }
-  }
-}
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
 ```
 
-#### Advanced: Direct Token Authentication (Cursor)
-
-If you prefer to authenticate without the interactive login flow, you can include your Pipeboard API token directly in the URL:
-
-```json
-{
-  "mcpServers": {
-    "meta-ads-remote": {
-      "url": "https://mcp.pipeboard.co/meta-ads-mcp?token=YOUR_PIPEBOARD_TOKEN"
-    }
-  }
-}
+3. Configure your Meta App credentials:
+```bash
+export META_APP_ID=your_app_id
+export META_APP_SECRET=your_app_secret
 ```
 
-Get your token at [pipeboard.co/api-tokens](https://pipeboard.co/api-tokens).
-
-### For Other MCP Clients
-
-Use the Remote MCP URL: `https://mcp.pipeboard.co/meta-ads-mcp`
-
-**[📖 Get detailed setup instructions for your AI client here](https://pipeboard.co)**
-
-#### Advanced: Direct Token Authentication (Other Clients)
-
-For MCP clients that support token-based authentication, you can append your Pipeboard API token to the URL:
-
+4. Start the MCP server:
+```bash
+python -m meta_ads_mcp --transport streamable-http --port 8080
 ```
-https://mcp.pipeboard.co/meta-ads-mcp?token=YOUR_PIPEBOARD_TOKEN
-```
+
+5. Use with your preferred MCP client (Claude Desktop, Cursor, etc.)
+
+For detailed setup instructions, see [Local Installation](#local-installation) below.
 
 This bypasses the interactive login flow and authenticates immediately. Get your token at [pipeboard.co/api-tokens](https://pipeboard.co/api-tokens).
 
@@ -104,7 +67,43 @@ This bypasses the interactive login flow and authenticates immediately. Get your
 
 🚀 **We strongly recommend using [Remote MCP](https://pipeboard.co) instead** - it's faster, more reliable, and requires no technical setup.
 
-Meta Ads MCP also supports a local streamable HTTP transport, allowing you to run it as a standalone HTTP API for web applications and custom integrations. See **[Streamable HTTP Setup Guide](STREAMABLE_HTTP_SETUP.md)** for complete instructions.
+## Configuration
+
+### Local Installation
+
+To run Meta Ads MCP locally:
+
+1. **Clone the repository**:
+```bash
+git clone https://github.com/nictuku/meta-ads-mcp.git
+cd meta-ads-mcp
+```
+
+2. **Install dependencies**:
+```bash
+pip install -r requirements.txt
+```
+
+3. **Create a Meta Developer App**:
+   - Go to [Meta for Developers](https://developers.facebook.com/)
+   - Create a new app with the "Business" app type
+   - Add "Ads API" product
+   - Generate an access token with the necessary permissions
+
+4. **Configure environment variables**:
+```bash
+export META_APP_ID=your_app_id
+export META_APP_SECRET=your_app_secret
+```
+
+5. **Start the server**:
+```bash
+python -m meta_ads_mcp --transport streamable-http --port 8080
+```
+
+6. **Use with MCP clients**: Configure your MCP client (Claude Desktop, Cursor, etc.) to connect to `http://localhost:8080`
+
+For advanced deployment options, see **[Streamable HTTP Setup Guide](STREAMABLE_HTTP_SETUP.md)**.
 
 ## Features
 
@@ -118,20 +117,10 @@ Meta Ads MCP also supports a local streamable HTTP transport, allowing you to ru
 - **Cross-Platform Integration**: Works with Facebook, Instagram, and all Meta ad platforms
 - **Universal LLM Support**: Compatible with any MCP client including Claude Desktop, Cursor, Cherry Studio, and more
 - **Enhanced Search**: Generic search function includes page searching when queries mention "page" or "pages"
-- **Simple Authentication**: Easy setup with secure OAuth authentication
+- **Secure Authentication**: OAuth-based authentication with local callback server for development
 - **Cross-Platform Support**: Works on Windows, macOS, and Linux
 
-## Configuration
-
-### Remote MCP (Recommended)
-
-**[✨ Get started with Remote MCP here](https://pipeboard.co)** - no technical setup required! Just connect your Facebook Ads account and start asking AI to analyze your campaigns.
-
-### Local Installation (Advanced Technical Users)
-
-For advanced users who need to self-host, the package can be installed from source. Local installations require creating your own Meta Developer App. **We recommend using [Remote MCP](https://pipeboard.co) for a simpler experience.**
-
-### Available MCP Tools
+## Available MCP Tools
 
 1. `mcp_meta_ads_get_ad_accounts`
    - Get ad accounts accessible by a user

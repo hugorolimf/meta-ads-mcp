@@ -4,7 +4,7 @@ Este documento descreve a arquitetura do projeto `meta-ads-mcp` (estrutura de co
 
 ## Visão geral
 
-O `meta-ads-mcp` é uma coleção de ferramentas e módulos para integrar com a API de anúncios da Meta (Facebook/Meta Marketing API), prover automações (ads, adsets, campanhas), relatórios (insights) e integrações com serviços de terceiros como OpenAI e provedores de autenticação (ex.: Pipeboard Auth). O repositório contém um entrypoint CLI/servidor em `meta_ads_mcp/__main__.py` e os módulos principais em `meta_ads_mcp/core/`.
+O `meta-ads-mcp` é uma coleção de ferramentas e módulos para integrar com a API de anúncios da Meta (Facebook/Meta Marketing API), prover automações (ads, adsets, campanhas), relatórios (insights) e integrações com serviços de terceiros como OpenAI. O repositório contém um entrypoint CLI/servidor em `meta_ads_mcp/__main__.py` e os módulos principais em `meta_ads_mcp/core/`.
 
 ## Diagrama de arquitetura (Mermaid)
 
@@ -35,14 +35,12 @@ flowchart LR
     Duplication[Duplication helpers (`duplication.py`) ]
     Utils[Utilitários (`utils.py`) ]
     OpenAI[OpenAI integration (`openai_deep_research.py`) ]
-    Pipeboard[Pipeboard Auth integration (`pipeboard_auth.py`) ]
   end
 
   %% External services
   subgraph External[Serviços externos]
     MetaAPI[(Meta Marketing API / Graph API)]
     OpenAIAPI[(OpenAI API)]
-    PipeboardAuth[(Pipeboard Auth)]
     Storage[(Storage / S3 / Blob)]
     Logging[(Logging / Monitoring / Sentry / Prometheus)]
     ClientsWebhooks[(Clientes - Webhooks / Callbacks)]
@@ -62,7 +60,6 @@ flowchart LR
   Server --> Insights
   Server --> Duplication
   Server --> OpenAI
-  Server --> Pipeboard
   Server --> Callback
 
   Accounts --> APIClient
@@ -73,7 +70,6 @@ flowchart LR
 
   APIClient --> MetaAPI
   OpenAI --> OpenAIAPI
-  Pipeboard --> PipeboardAuth
 
   Callback -->|webhook relay| ClientsWebhooks
   Server -->|store artifacts| Storage
@@ -91,12 +87,11 @@ flowchart LR
 - Entrypoint (`meta_ads_mcp/__main__.py`): inicializador da aplicação; interpreta argumentos CLI e inicia o servidor local ou executa tarefas ad-hoc.
 - `core/server.py`: orquestra as rotas HTTP, endpoints REST e expõe APIs usadas por clientes internos/externos.
 - `core/callback_server.py`: recebe webhooks/callbacks da Meta e repassa para processamento.
-- Autenticação (`auth.py`, `authentication.py`): gerencia tokens, refresh, e integração com provedores (Pipeboard, HTTP-auth, etc.).
+- Autenticação (`auth.py`, `authentication.py`): gerencia tokens, refresh, e fluxos de autenticação OAuth.
 - `api.py` / `http_auth_integration.py`: camada de transporte HTTP com retry, logging, e tratamento de erros específicos da Meta API.
 - Módulos de domínio (`accounts.py`, `ads.py`, `adsets.py`, `campaigns.py`, `ads_library.py`): encapsulam operações de negócios sobre contas, campanhas, criativos.
 - Insights e Reports (`insights.py`, `reports.py`): coleta e normalização de métricas / ações / valores.
 - `openai_deep_research.py`: integração com OpenAI para enriquecimento de dados e automações (onde aplicável).
-- `pipeboard_auth.py`: integração com o serviço Pipeboard para delegação/autorização quando usada.
 - `utils.py`: funções auxiliares e helpers.
 
 ## Fluxos importantes (resumido)
@@ -111,7 +106,7 @@ flowchart LR
 ## Notas de implantação
 
 - Contêiner: `Dockerfile` já presente; rodar a partir da imagem garante dependências isoladas.
-- Configuração: `server.json` e variáveis de ambiente para credenciais (Meta tokens, OpenAI key, Pipeboard credentials).
+- Configuração: `server.json` e variáveis de ambiente para credenciais (Meta tokens, OpenAI key).
 - Observabilidade: conectar `Logging`/`Monitoring` (Sentry, Prometheus) para métricas e alertas.
 
 ## Melhorias e próximos passos sugeridos
